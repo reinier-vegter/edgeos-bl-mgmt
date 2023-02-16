@@ -8,3 +8,5 @@
 ehthumbs.db
 Thumbs.db
 .swp
+country/
+.ipset_tmp.txt

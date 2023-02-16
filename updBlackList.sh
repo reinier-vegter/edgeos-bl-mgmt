@@ -84,6 +84,14 @@
 fwGroupNets4="Nets4-BlackList"
 fwGroupNets6="Nets6-BlackList"
 #
+# Firewall allowed country range groups
+#   These network-groups must already exist.
+#   These shoudld be created via EdgeOS BUI or CLI, and to have any
+#     effect must be assigned to one or more firewall rules
+#   Leave empty to not populate IPset netgroup
+fwCountryGroupNets4="Nets4-AllowedCountry"
+fwCountryGroupNets6="Nets6-AllowedCountry"
+#
 # Persistent data location (directory)
 dirUserData="/config/user-data"
 #

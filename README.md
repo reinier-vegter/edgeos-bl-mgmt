@@ -3,6 +3,52 @@
 Automated management of network and host address blocklists, for use
 in EdgeRouter (EdgeOS) firewall rules.
 
+### Prerequisites
+
+<!-- Enable apt repos
+```bash
+configure
+set system package repository stretch components 'main contrib non-free' 
+set system package repository stretch distribution stretch
+set system package repository stretch url http://http.us.debian.org/debian
+commit
+save
+```
+
+Install bc (progress bar tool):
+```bash
+curl --output bc.deb http://ftp.de.debian.org/debian/pool/main/b/bc/bc_1.06.95-9+b3_mipsel.deb
+dpkg -i bc.deb
+rm bc.deb
+``` -->
+
+Install aggregate (ip consolidation):
+```bash
+curl --output aggregate.deb http://ftp.de.debian.org/debian/pool/main/a/aggregate/aggregate_1.6-7+b1_mipsel.deb
+dpkg -i aggregate.deb
+rm aggregate.deb
+```
+
+### Addition for allowing country ranges.
+`configure`
+
+1. For IPv4:  `set firewall group address-group AllowedCountryIpv4 description 'Allowed country IPv4 Sources'`  
+`commit`
+`save`
+
+Fw rule block non allowed geo countries
+```
+configure
+set firewall name WAN_IN rule 1 description 'Block non-allowed Geo'
+set firewall name WAN_IN rule 1 source group address-group \!AllowedCountryIPv4
+set firewall name WAN_IN rule 1 action drop
+set firewall name WAN_IN rule 1 protocol all
+set firewall name WAN_IN rule 1 state new enable
+set firewall name WAN_IN rule 1 state invalid enable
+commit
+save
+```
+
 
 ### Quick Start
 To get started, perform these steps on your EdgeRouter from a CLI configure prompt:  
