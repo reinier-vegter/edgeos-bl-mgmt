@@ -1,11 +1,33 @@
 #!/bin/bash
 
-OUTFOLDER=/config/user-data/edgeos-bl-mgmt/country
-IPSET="sudo ipset"
+OUTFOLDER=/tmp/ip_geo_blocklist
+
+function printHelpExit() {
+  echo "Usage:"
+  echo "  $0 \"outputfile\" \"allowed_countries_file\""
+  echo "  Outputfile: ipset file with ipset-name 'BlockedCountryIPv4Tmp'"
+  echo "  allowed_countries_file: country codes allowed, each on a new line"
+  exit 1
+}
+[ "$2" = "" ] && printHelpExit
+OUTFILE=$1
+ALLOWED_COUNTRY_FILE=$2
 
 # Exit immediately if a simple command exits with a non-zero status
 set -e
 
+# [ ! -d "$OUTFOLDER" ] && mkdir -p "$OUTFOLDER"
+function stopError() {
+  msg=$1
+  echo "$msg"
+  exit 1
+}
+
+# Check binaries and folders.
+command -v mapcidr > /dev/null || stopError "Install [mapcidr]"
+[ ! -d "$(dirname "$OUTFILE")" ] && stopError "Folder [$(dirname "$OUTFILE")] does not exist"
+[ -f "$OUTFILE" ] && stopError "File [$OUTFILE] already exists"
+[ ! -f "$ALLOWED_COUNTRY_FILE" ] && stopError "File [$ALLOWED_COUNTRY_FILE] does not exist"
 [ ! -d "$OUTFOLDER" ] && mkdir -p "$OUTFOLDER"
 
 # Download data from registries
@@ -22,7 +44,7 @@ awk -F '|' '{ print $2 }' "$OUTFOLDER"/.delegated-*-latest.txt | sort | uniq | g
 allowed_cc=( )
 while read cc; do 
   allowed_cc+=("cc")
-done <<< "$(cat allowed-country-codes.txt | sed 's/#.*//g' | egrep -v '\s+|^$')"
+done <<< "$(cat "$ALLOWED_COUNTRY_FILE" | sed 's/#.*//g' | egrep -v '\s+|^$')"
 
 # Generate country ip blocks, except allowed ones.
 echo "Generating blocklist..."
@@ -38,35 +60,17 @@ done < "$OUTFOLDER"/.country_code.txt
 cat "$OUTFOLDER/BlockedCountryIPv4.txt" | sort | uniq > "$OUTFOLDER/BlockedCountryIPv4.txt1"
 # cat "$OUTFOLDER/BlockedCountryIPv6.txt" | sort | uniq > "$OUTFOLDER/BlockedCountryIPv6.txt1"
 
-echo "Generated $OUTFOLDER/BlockedCountryIPv4.txt"
-echo "Generated $OUTFOLDER/BlockedCountryIPv6.txt"
+echo "Generated $OUTFOLDER/BlockedCountryIPv4.txt1"
+# echo "Generated $OUTFOLDER/BlockedCountryIPv6.txt"
 echo "Consolidating IPv4 list"
-cat "$OUTFOLDER/BlockedCountryIPv4.txt1" | aggregate -q > "$OUTFOLDER/BlockedCountryIPv4.txt"
-# mv "$OUTFOLDER/BlockedCountryIPv6.txt1" "$OUTFOLDER/BlockedCountryIPv6.txt"
-echo "done"
+mapcidr -cl "$OUTFOLDER/BlockedCountryIPv4.txt1" -aggregate > "$OUTFOLDER/BlockedCountryIPv4.txt"
 
-################
-
-$IPSET list BlockedCountryIPv4 >/dev/null # Check if already exists. If it doesn't manually create it (README).
-$IPSET -X BlockedCountryIPv4Tmp >/dev/null 2>&1 || echo -n ""
-
-[ -f "$OUTFOLDER/.ipset_tmp.txt" ] && rm "$OUTFOLDER/.ipset_tmp.txt"
-touch "$OUTFOLDER/.ipset_tmp.txt"
-echo "create BlockedCountryIPv4Tmp hash:net family inet hashsize 4096 maxelem 1000000" >> "$OUTFOLDER/.ipset_tmp.txt"
-
+# Generate ipset file
+touch "$OUTFILE"
+echo "create BlockedCountryIPv4Tmp hash:net family inet hashsize 4096 maxelem 1000000" >> "$OUTFILE"
 while read cidr; do
-  echo "add BlockedCountryIPv4Tmp $cidr" >> "$OUTFOLDER/.ipset_tmp.txt"
+  echo "add BlockedCountryIPv4Tmp $cidr" >> "$OUTFILE"
 done < "$OUTFOLDER/BlockedCountryIPv4.txt"
 
-echo "Loading generated ipset file"
-ipset restore -f "$OUTFOLDER/.ipset_tmp.txt"
-echo "done"
-
-echo "done, swapping tmp ipset with real one"
-$IPSET swap BlockedCountryIPv4Tmp BlockedCountryIPv4
-$IPSET -X BlockedCountryIPv4Tmp
-echo "Added ranges to ipset 'BlockedCountryIPv4'"
-
-echo "Persisting in file for boot loading"
-$IPSET save BlockedCountryIPv4 > "$OUTFOLDER/PersistedIpsetBlockedCountryIPv4.txt"
+echo "Resulting ipset in [$OUTFILE] with ipset-name [BlockedCountryIPv4Tmp]"
 echo "done"

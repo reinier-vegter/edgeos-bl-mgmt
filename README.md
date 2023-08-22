@@ -32,7 +32,7 @@ rm aggregate.deb
 ### Addition for allowing country ranges.
 `configure`
 
-1. For IPv4:  `set firewall group address-group AllowedCountryIpv4 description 'Allowed country IPv4 Sources'`  
+1. For IPv4:  `set firewall group network-group BlockedCountryIPv4 description 'Blocked country IPv4 Sources'`  
 `commit`
 `save`
 
@@ -40,7 +40,7 @@ Fw rule block non allowed geo countries
 ```
 configure
 set firewall name WAN_IN rule 1 description 'Block non-allowed Geo'
-set firewall name WAN_IN rule 1 source group address-group \!AllowedCountryIPv4
+set firewall name WAN_IN rule 1 source group network-group BlockedCountryIPv4
 set firewall name WAN_IN rule 1 action drop
 set firewall name WAN_IN rule 1 protocol all
 set firewall name WAN_IN rule 1 state new enable
