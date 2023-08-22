@@ -1,13 +1,13 @@
 #!/bin/bash
 
 
-# Should be copied onto EdgeOs into /config/scripts/post-config.d/loadBlackList.sh .
+# Should be copied onto EdgeOs into /config/scripts/post-config.d/loadCountryBlackList.sh .
 # This way it loads on boot.
 #
 # Also run
 #  `configure`
 #  ```
-#  set system task-scheduler task UpdateCountryBlock executable path /config/scripts/post-config.d/loadBlackList.sh
+#  set system task-scheduler task UpdateCountryBlock executable path /config/scripts/post-config.d/loadCountryBlackList.sh
 #  set system task-scheduler task UpdateCountryBlock interval 6h
 #  ```
 #  `commit`

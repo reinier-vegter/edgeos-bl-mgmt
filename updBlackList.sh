@@ -141,7 +141,7 @@ useLogger=2
 #     largest that will be dynamically allowed, and if the total count of
 #     blocked networks + hosts is greater than this value then no
 #     update will be made to the firewall group.
-fwSetMaxElem=131071
+fwSetMaxElem=200000
 #
 # Location for 'iprange' exectuable, optional.
 #   See https://github.com/firehol/iprange/wiki
